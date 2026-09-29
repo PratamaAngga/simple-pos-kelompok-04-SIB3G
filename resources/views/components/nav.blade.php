@@ -14,5 +14,8 @@
             Riwayat Transaksi
         </a>
 
+        <!-- Link Produk -->
+        <a href="{{ route('products.index') }}" class="hover:underline">Produk</a>
+
     </div>
 </nav>
