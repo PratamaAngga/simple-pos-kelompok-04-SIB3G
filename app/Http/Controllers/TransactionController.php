@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Product; //Mengimpor model Product
+use App\Models\Transaction;
 
 class TransactionController extends Controller
 {
@@ -18,7 +19,8 @@ class TransactionController extends Controller
 
     public function index()
     {
-        return view('transactions.index');
+        $transactions = Transaction::latest()->paginate(15);
+        return view('transactions.index', compact('transactions'));
     }
 
     public function show(string $id)
