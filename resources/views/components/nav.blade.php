@@ -1,21 +1,14 @@
-<nav class="bg-white border-b border-gray-200 px-6 py-4">
-    <!-- flex & items-center untuk merapikan posisi, space-x-6 untuk memberi jarak antar link -->
-    <div class="flex items-center space-x-6">
-        
-        <!-- Link POS / Kasir -->
-        <a href="{{ Route::has('pos') ? route('pos') : '/pos' }}" 
-           class="{{ request()->is('pos') || request()->routeIs('pos') ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900' }} pb-1 transition">
-            POS
-        </a>
-
-        <!-- Link Riwayat Transaksi -->
-        <a href="{{ Route::has('transactions.index') ? route('transactions.index') : '#' }}" 
-           class="{{ request()->routeIs('transactions.*') ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900' }} pb-1 transition">
-            Riwayat Transaksi
-        </a>
-
-        <!-- Link Produk -->
+<nav class="bg-slate-900 text-white px-4 py-3 flex gap-4 items-center">
+    <span class="font-semibold">Simple POS</span>
+    <a href="{{ route('pos.create') }}" class="hover:underline">Kasir</a>
+    <a href="{{ route('transactions.index') }}" class="hover:underline">Transaksi</a>
+    @if (auth()->user()?->isAdmin())
         <a href="{{ route('products.index') }}" class="hover:underline">Produk</a>
-
-    </div>
+        <a href="{{ route('categories.index') }}" class="hover:underline">Kategori</a>
+    @endif
+    <span class="ml-auto text-sm">{{ auth()->user()?->name }} ({{ auth()->user()?->role}})</span>
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button class="hover:underline">Keluar</button>
+    </form>
 </nav>
