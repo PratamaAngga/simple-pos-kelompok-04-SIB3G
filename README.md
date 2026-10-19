@@ -13,3 +13,42 @@ The error keys use dot notation (items.0.qty and items.0.product_id), where the 
 No, it is not enough. The numeric rule only checks the shape of the data, meaning whether the value is a number, not whether that number is correct. The client is fully under the user's control: with curl or browser DevTools, anyone can send total=1 for a Rp500,000 purchase, and that value still passes both numeric and min:0, so the server would store a fake total. Sending per-item prices from the form does not help either, since those can be forged too.
 
 The solution is to trust no number from the client. The client only sends product_id and qty, and the server fetches prices from the database, computes price × qty for each row, and sums them into the total, as TransactionController::store() does. Because total is in $fillable, code like Transaction::create($request->all()) must also be avoided, since it would store the client-supplied total as is.
+
+## Skenario Uji Manual (Autentikasi & RBAC)
+
+Jalankan `php artisan migrate:fresh --seed` lalu `php artisan serve`.
+Semua akun demo memakai kata sandi `password`.
+
+### Admin (admin@pos.test)
+| Langkah | Hasil yang diharapkan |
+|---|---|
+| Login lewat `/login` | Masuk, diarahkan ke `/pos` |
+| Buka `/products` dan `/categories` | Halaman tampil normal |
+| Lihat navigasi | Menu Produk dan Kategori muncul |
+
+### Kasir (kasir@pos.test)
+| Langkah | Hasil yang diharapkan |
+|---|---|
+| Login lewat `/login` | Masuk, diarahkan ke `/pos` |
+| Buka `/pos` dan `/transactions` | Halaman tampil normal |
+| Buka `/products` atau `/categories` | Error 403 |
+| Lihat navigasi | Menu Produk dan Kategori tidak muncul |
+
+### Manager (manager@pos.test)
+| Langkah | Hasil yang diharapkan |
+|---|---|
+| Login lewat `/login` | Masuk, diarahkan ke `/pos` |
+| Buka `/transactions` | Halaman tampil normal |
+| Buka `/products` atau `/categories` | Error 403 |
+
+### Tamu (belum login)
+| Langkah | Hasil yang diharapkan |
+|---|---|
+| Buka `/products` atau `/pos` | Diarahkan ke `/login` |
+| `curl -i http://127.0.0.1:8000/pos -H "Accept: application/json"` | Status 401, isi `{"message":"Unauthenticated."}` |
+| Login dengan kata sandi salah | Pesan "Email atau kata sandi salah." |
+
+### Akun nonaktif
+| Langkah | Hasil yang diharapkan |
+|---|---|
+| Set `is_active` = false lewat tinker, lalu login | Pesan "Akun dinonaktifkan. Hubungi admin." |
