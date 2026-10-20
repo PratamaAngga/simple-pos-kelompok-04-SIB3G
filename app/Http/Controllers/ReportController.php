@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Models\ImportError;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -67,10 +68,24 @@ class ReportController extends Controller
         [$from, $to] = $this->resolveDateRange($request);
         $categoryId = $this->resolveCategory($request);
 
+        $produkTerlaris = DB::table('transaction_details')
+            ->join('products', 'transaction_details.product_id', '=', 'products.id')
+            ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
+            ->whereBetween('transactions.created_at', [$from, $to])
+            ->select(
+                'products.name',
+                DB::raw('SUM(transaction_details.qty) as jumlah_terjual')
+            )
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('jumlah_terjual')
+            ->limit(10)
+            ->get();
+
         $pdf = Pdf::loadView('reports.pdf', [
             'totalPenjualan' => $this->filteredQuery($from, $to, $categoryId)->sum('total'),
             'jumlahTransaksi' => $this->filteredQuery($from, $to, $categoryId)->count(),
             'transactions' => $this->filteredQuery($from, $to, $categoryId)->latest()->limit(50)->get(),
+            'produkTerlaris' => $produkTerlaris,
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
         ]);

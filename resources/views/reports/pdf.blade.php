@@ -38,5 +38,28 @@
             @endforeach
         </tbody>
     </table>
+        <h2>10 Produk Terlaris</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Nama Produk</th>
+                <th class="right">Jumlah Terjual</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($produkTerlaris as $index => $produk)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $produk->name }}</td>
+                    <td class="right">{{ $produk->jumlah_terjual }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3">Belum ada data penjualan produk.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 </body>
 </html>
