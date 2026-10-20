@@ -15,6 +15,7 @@ use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\ImportError;
 
 class ReportController extends Controller
 {
@@ -79,7 +80,9 @@ class ReportController extends Controller
 
     public function importForm(): View
     {
-        return view('reports.import');
+        return view('reports.import', [
+            'importErrors' => ImportError::latest()->limit(100)->get(),
+        ]);
     }
 
     public function import(Request $request): RedirectResponse
