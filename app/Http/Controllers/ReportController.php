@@ -6,9 +6,25 @@ use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        [$from, $to] = $this->resolveDateRange($request);
+        $query = $this->filteredQuery($from, $to);
+
+        return response()->streamDownload(function () use ($query) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['ID', 'Tanggal', 'Kasir', 'Total']);
+            foreach ($query->lazyById() as $t) {
+                fputcsv($out, [$t->id, $t->created_at, $t->user->name, $t->total]);
+            }
+            fclose($out);
+        }, 'laporan-penjualan.csv');
+    }
+
     public function index(Request $request): View
     {
         [$from, $to] = $this->resolveDateRange($request);
