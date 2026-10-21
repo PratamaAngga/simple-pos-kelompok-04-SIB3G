@@ -52,3 +52,33 @@ Semua akun demo memakai kata sandi `password`.
 | Langkah | Hasil yang diharapkan |
 |---|---|
 | Set `is_active` = false lewat tinker, lalu login | Pesan "Akun dinonaktifkan. Hubungi admin." |
+
+## Usulan Proses yang Layak Menggunakan Queue (JOBSHEET 8)
+
+### Proses yang diusulkan: pengiriman struk transaksi lewat email
+
+Setelah kasir menyelesaikan transaksi di halaman '/pos', sistem
+mengirim struk (ringkasan item, total, dan waktu transaksi) ke email pelanggan.
+
+### Mengapa proses ini layak masuk queue
+1. Lambat dan bergantung pada pihak luar. Pengiriman email harus menghubungi server SMTP. Waktunya tidak bisa diprediksi, kadang cepat, kadang beberapa detik, dan bisa gagal kalau server email sedang bermasalah.
+2. Kasir tidak boleh menunggu . Tanpa queue, tombol "Bayar" baru selesai setelah email terkirim. Di jam ramai, antrean pelanggan di kasir menjadi lebih panjang hanya karena menunggu email.
+3. Kegagalan email tidak boleh membatalkan transaksi. Transaksi dan stok sudah tersimpan di database. Kalau email gagal, yang perlu diulang hanyalah pengiriman emailnya, bukan seluruh transaksi.
+4. Aman diulang. Mengirim ulang struk yang sama tidak mengubah data di database, sehingga job boleh dicoba beberapa kali.
+5. Sama polanya dengan import produk. Seperti 'ProcessProductImport', proses cukup menerima ID transaksi, lalu mengerjakan sisanya di background, dengan '$tries' dan '$backoff' untuk percobaan ulang. Job yang tetap gagal tercatat di 'failed_jobs' sehingga bisa ditelusuri.
+
+### Rancangan singkat
+- Setelah transaksi tersimpan di 'TransactionController: :store()', panggil `SendReceiptEmail: :dispatch($transaction->id);'.
+- Job 'SendReceiptEmail' menerima ** ID transaksi saja ** (bukan seluruh data), memuat transaksi beserta item dan kasirnya, lalu mengirim email.
+- Dengan '$tries = 3' dan '$backoff = [10, 60]', email dicoba ulang kalau server SMTP sedang bermasalah.
+- Kasir langsung melihat konfirmasi "Transaksi berhasil" tanpa menunggu email.
+
+### Alternatif lain yang juga cocok
+Rekap penjualan harian otomatis. Menghitung total penjualan seluruh hari dan membuat file PDF atau Excel-nya membutuhkan waktu dan memori, sehingga sebaiknya dijalankan di background pada jam sepi (misalnya malam hari), bukan saat admin menunggu di browser.
+
+### Perlu diingat
+Queue membutuhkan worker yang selalu berjalan (`php artisan queue:work'). Pastikan 'QUEUE_CONNECTION=database' dan worker di-restart setiap kali kode job berubah. Di server produksi worker dijalankan lewat process manager seperti Supervisor.
+
+## Diskusi: Format Laporan untuk 100.000 Transaksi (STEP 6)
+
+Kami memilih ** CSV **. CSV bisa dialirkan per baris dengan 'streamDownload()' dan `lazyById()`, sehingga pemakaian memori tetap kecil berapa pun jumlah datanya. Excel masih bisa dipakai karena Laravel Excel membaca data per potongan lewat 'FromQuery', tetapi prosesnya lebih berat. PDF tidak cocok karena DomPDF menyimpan seluruh dokumen di memori, sehingga laporan sebesar itu berisiko kehabisan memori dan menghasilkan dokumen yang terlalu panjang untuk dibaca.
