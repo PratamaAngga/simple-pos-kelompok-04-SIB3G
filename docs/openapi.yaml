@@ -31,14 +31,55 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
+        '429':
+          description: Terlalu banyak percobaan login (maksimal 5 per menit)
   /api/products:
     get:
-      summary: Ambil daftar produk
+      summary: Ambil daftar produk (dengan paginasi, filter, dan pengurutan)
       security:
         - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Nomor halaman yang diminta
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Jumlah produk per halaman (maksimal 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+        - name: sort
+          in: query
+          description: Urutan hasil. Awalan minus berarti menurun (descending)
+          required: false
+          schema:
+            type: string
+            enum: [name, -name, price, -price]
+            default: name
+        - name: q
+          in: query
+          description: Cari berdasarkan nama produk (minimal 2 karakter)
+          required: false
+          schema:
+            type: string
+            minLength: 2
+        - name: category_id
+          in: query
+          description: Filter berdasarkan id kategori
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
-          description: Daftar produk
+          description: Daftar produk terpaginasi
           content:
             application/json:
               schema:
@@ -53,8 +94,26 @@ paths:
                         name: { type: string }
                         price: { type: integer }
                         category: { type: string }
+                  links:
+                    type: object
+                    properties:
+                      first: { type: string }
+                      last: { type: string }
+                      prev: { type: string, nullable: true }
+                      next: { type: string, nullable: true }
+                  meta:
+                    type: object
+                    properties:
+                      current_page: { type: integer }
+                      from: { type: integer }
+                      last_page: { type: integer }
+                      per_page: { type: integer }
+                      to: { type: integer }
+                      total: { type: integer }
         '401':
           description: Token tidak ada atau tidak valid
+        '422':
+          description: Parameter query tidak valid, misalnya per_page lebih dari 100
   /api/transactions:
     post:
       summary: Buat transaksi baru
