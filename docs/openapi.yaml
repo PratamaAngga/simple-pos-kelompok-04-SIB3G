@@ -3,7 +3,7 @@ info:
   title: Simple POS API
   version: 1.0.0
 paths:
-  /api/login:
+  /api/v1/login:
     post:
       summary: Login dan dapatkan token
       requestBody:
@@ -33,7 +33,7 @@ paths:
                   message: { type: string }
         '429':
           description: Terlalu banyak percobaan login (maksimal 5 per menit)
-  /api/products:
+  /api/v1/products:
     get:
       summary: Ambil daftar produk (dengan paginasi, filter, dan pengurutan)
       security:
@@ -114,7 +114,7 @@ paths:
           description: Token tidak ada atau tidak valid
         '422':
           description: Parameter query tidak valid, misalnya per_page lebih dari 100
-  /api/transactions:
+  /api/v1/transactions:
     post:
       summary: Buat transaksi baru
       security:
