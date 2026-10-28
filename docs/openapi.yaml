@@ -1,3 +1,18 @@
+# Testing Notes: Postman vs. curl
+# We tested three endpoints (login, products, transactions) using Postman at
+# the address /api/v1, then compared the results with our experience using curl. In Postman,
+# the JSON body can simply be typed into the Body tab (raw, JSON) without having to worry about escaping
+# quotation marks, whereas in curl on PowerShell, my JSON became corrupted (resulting in the error
+# “bad range specification” and the response “items field is required”), so I had to
+# save it to a file first. The Bearer token only needs to be entered once via the Authorization tab,
+# whereas with curl, the token must be manually pasted into every command. Error scenarios
+# are also quicker to test: to get a 401, I simply changed the Auth Type to
+# No Auth, and for a 422, I just changed the `product_id` to 99999; then the status codes
+# (200, 201, 401, 422) and the JSON content are neatly displayed in a single panel. The downside is that
+# Postman needs to be installed and feels heavier, whereas curl is lightweight, available in
+# any terminal, and its commands are easy to copy into documentation or scripts. With
+# both tools, I still have to make sure the `Accept: application/json` header is sent so that
+# Laravel returns JSON instead of redirecting to the login page.
 openapi: 3.0.0
 info:
   title: Simple POS API
