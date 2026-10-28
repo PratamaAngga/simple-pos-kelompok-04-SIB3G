@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 class ApiClientDemo extends Command
 {
     /** * The name and signature of the console command. * 7* @var string */
-    protected $signature = 'api:demo';
+    protected $signature = 'api:demo {--salah : Coba login dengan password salah}';
 
     /** * The console command description. * * @var string */
     protected $description = 'Demonstrate consuming the Simple POS API as an external client';
@@ -19,9 +19,11 @@ class ApiClientDemo extends Command
     {
         $baseUrl = 'http://127.0.0.1:8000/api/v1';
 
+        $password = $this->option('salah') ? 'salah' : 'password';
+
         $login = Http::acceptJson()->post("{$baseUrl}/login", [
             'email' => 'kasir@pos.test',
-            'password' => 'password',
+            'password' => $password,
         ]);
 
         if ($login->failed()) {
